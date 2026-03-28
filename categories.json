@@ -1,0 +1,54 @@
+{
+  "categories": [
+    {
+      "id": "safety_training",
+      "label": "안전 교육",
+      "prompt": "safety training session at a construction site, workers sitting and listening to instructor"
+    },
+    {
+      "id": "hard_hat",
+      "label": "안전모 착용",
+      "prompt": "construction workers wearing hard hats and safety helmets on site"
+    },
+    {
+      "id": "demolition",
+      "label": "해체 작업",
+      "prompt": "demolition work at a construction site, breaking down and dismantling structures"
+    },
+    {
+      "id": "rebar",
+      "label": "철근 작업",
+      "prompt": "rebar and steel reinforcement work at a construction site, tying steel bars"
+    },
+    {
+      "id": "concrete",
+      "label": "콘크리트 타설",
+      "prompt": "pouring and placing concrete at a construction site with pump truck"
+    },
+    {
+      "id": "equipment",
+      "label": "장비 운용",
+      "prompt": "heavy equipment and machinery operation at construction site, crane excavator bulldozer"
+    },
+    {
+      "id": "inspection",
+      "label": "현장 점검",
+      "prompt": "construction site inspection and safety check by supervisors with clipboard"
+    },
+    {
+      "id": "scaffolding",
+      "label": "비계 작업",
+      "prompt": "scaffolding installation and work at height on construction site"
+    },
+    {
+      "id": "excavation",
+      "label": "굴착 작업",
+      "prompt": "excavation and earthwork at construction site, digging ground"
+    },
+    {
+      "id": "other",
+      "label": "기타",
+      "prompt": "miscellaneous activity at a construction site"
+    }
+  ]
+}
