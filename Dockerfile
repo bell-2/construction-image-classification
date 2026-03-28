@@ -1,13 +1,9 @@
-FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir \
-    open-clip-torch \
-    Pillow \
-    fastapi \
-    uvicorn \
-    python-multipart
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
 COPY classifier.py categories.json server.py ./
 COPY static/ static/
