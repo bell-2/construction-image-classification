@@ -175,7 +175,7 @@ theme = gr.themes.Base(
     button_primary_text_color_dark="#000",
 )
 
-with gr.Blocks(title="Construction View — 건설 현장 사진 분류", theme=theme, css=css) as demo:
+with gr.Blocks(title="Construction View — 건설 현장 사진 분류") as demo:
     gr.Markdown(
         """
         # 🏗️ CONSTRUCTION VIEW
