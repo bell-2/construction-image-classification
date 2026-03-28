@@ -1,10 +1,8 @@
-FROM python:3.11-slim
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
 WORKDIR /app
 
 RUN pip install --no-cache-dir \
-    --extra-index-url https://download.pytorch.org/whl/cpu \
-    torch \
     open-clip-torch \
     Pillow \
     fastapi \
