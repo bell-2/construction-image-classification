@@ -3,9 +3,7 @@ title: Construction View
 emoji: 🏗️
 colorFrom: yellow
 colorTo: gray
-sdk: gradio
-sdk_version: 6.10.0
-app_file: gradio_app.py
+sdk: docker
 pinned: false
 ---
 
