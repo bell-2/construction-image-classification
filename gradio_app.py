@@ -217,5 +217,4 @@ with gr.Blocks(title="Construction View — 건설 현장 사진 분류", theme=
         outputs=[gallery_output, summary_output, zip_output],
     )
 
-if __name__ == "__main__":
-    demo.launch(theme=theme, css=css)
+demo.launch(theme=theme, css=css, ssr_mode=False)
