@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Construction View — 건설 현장 사진 분류</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
@@ -134,6 +135,23 @@ main {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem 4rem;
+  display: flex;
+  gap: 1.5rem;
+}
+
+.sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 4rem;
+  align-self: flex-start;
+  max-height: calc(100vh - 5rem);
+  overflow-y: auto;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ── DROP ZONE ── */
@@ -274,77 +292,57 @@ main {
   border-color: var(--accent);
 }
 
-/* ── CATEGORY MANAGER ── */
-.category-manager {
-  margin-bottom: 2rem;
+/* ── SIDEBAR CATEGORY MANAGER ── */
+.sidebar-section {
   border: 1px solid var(--border);
   background: var(--bg-secondary);
+  margin-bottom: 1rem;
 }
 
-.category-manager-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 1.5rem;
-  cursor: pointer;
-  transition: background 0.2s;
+.sidebar-section-header {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
 }
 
-.category-manager-header:hover {
-  background: var(--bg-card);
-}
-
-.category-manager-header h3 {
-  font-size: 0.85rem;
+.sidebar-section-header h3 {
+  font-size: 0.75rem;
   font-weight: 600;
-  color: var(--text-secondary);
-  letter-spacing: 0.05em;
-}
-
-.category-manager-toggle {
   color: var(--text-muted);
-  font-size: 0.8rem;
-  transition: transform 0.3s;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
-
-.category-manager-toggle.open { transform: rotate(180deg); }
-
-.category-manager-body {
-  display: none;
-  padding: 0 1.5rem 1.5rem;
-}
-
-.category-manager-body.visible { display: block; }
 
 .cat-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 1rem;
-  max-height: 300px;
+  gap: 0;
+  max-height: 400px;
   overflow-y: auto;
 }
 
 .cat-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 0.6rem 0.8rem;
-  background: var(--bg-card);
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
   font-size: 0.8rem;
+  transition: background 0.2s;
 }
+
+.cat-item:hover { background: var(--bg-card); }
 
 .cat-item-label {
   font-weight: 600;
   color: var(--text-primary);
-  min-width: 80px;
+  flex-shrink: 0;
 }
 
 .cat-item-prompt {
   flex: 1;
   color: var(--text-muted);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -365,11 +363,13 @@ main {
 
 .cat-add-form {
   display: flex;
+  flex-direction: column;
   gap: 0.5rem;
+  padding: 0.8rem 1rem;
 }
 
 .cat-add-form input {
-  flex: 1;
+  width: 100%;
   padding: 0.5rem 0.8rem;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -739,6 +739,8 @@ main {
 @media (max-width: 768px) {
   h1 { font-size: 2.5rem; }
   .header-stats { display: none; }
+  main { flex-direction: column; }
+  .sidebar { width: 100%; position: static; max-height: none; }
   .summary-strip { flex-wrap: wrap; }
   .summary-item { min-width: calc(33% - 1px); }
   .image-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
@@ -784,13 +786,12 @@ body::after {
 </header>
 
 <main>
-  <!-- Category Manager -->
-  <div class="category-manager">
-    <div class="category-manager-header" onclick="toggleCategoryManager()">
-      <h3>📋 카테고리 관리</h3>
-      <span class="category-manager-toggle" id="catToggle">▼</span>
-    </div>
-    <div class="category-manager-body" id="catManagerBody">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-header">
+        <h3>📋 카테고리</h3>
+      </div>
       <div class="cat-list" id="catList"></div>
       <div class="cat-add-form">
         <input type="text" id="newCatLabel" placeholder="한글 이름 (예: 용접 작업)">
@@ -798,7 +799,10 @@ body::after {
         <button class="btn-add-cat" onclick="addCategory()">추가</button>
       </div>
     </div>
-  </div>
+  </aside>
+
+  <!-- Content -->
+  <div class="content">
 
   <!-- Drop Zone -->
   <div class="drop-zone" id="dropZone">
@@ -844,6 +848,8 @@ body::after {
     <!-- Grid -->
     <div class="image-grid" id="imageGrid"></div>
   </div>
+
+  </div><!-- /content -->
 </main>
 
 <!-- Lightbox -->
@@ -878,13 +884,7 @@ let imageUrls = {};
 let activeFilter = 'all';
 
 // ── Category Manager ──
-function toggleCategoryManager() {
-  const body = document.getElementById('catManagerBody');
-  const toggle = document.getElementById('catToggle');
-  body.classList.toggle('visible');
-  toggle.classList.toggle('open');
-  if (body.classList.contains('visible')) loadCategories();
-}
+loadCategories();
 
 async function loadCategories() {
   const res = await fetch('/api/categories');
