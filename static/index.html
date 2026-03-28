@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction View — 건설 현장 사진 분류</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+KR:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #141414;
+  --bg-card: #1a1a1a;
+  --bg-card-hover: #222;
+  --border: #2a2a2a;
+  --border-active: #f59e0b;
+  --text-primary: #fafafa;
+  --text-secondary: #888;
+  --text-muted: #555;
+  --accent: #f59e0b;
+  --accent-bright: #fbbf24;
+  --accent-dim: #b45309;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --caution-stripe: repeating-linear-gradient(
+    -45deg,
+    #f59e0b 0px, #f59e0b 10px,
+    #0a0a0a 10px, #0a0a0a 20px
+  );
+}
+
+html { font-size: 16px; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── CAUTION STRIPE HEADER ── */
+.caution-bar {
+  height: 6px;
+  background: var(--caution-stripe);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 3rem 2rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.header-grid {
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+}
+
+.logo-block {
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  width: 56px;
+  height: 56px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  clip-path: polygon(0 0, 100% 0, 100% 70%, 70% 100%, 0 100%);
+  margin-bottom: 0.75rem;
+}
+
+h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 3.5rem;
+  letter-spacing: 0.08em;
+  line-height: 0.9;
+  color: var(--text-primary);
+}
+
+h1 span {
+  color: var(--accent);
+}
+
+.subtitle {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-top: 0.5rem;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+}
+
+.header-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 2rem;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.header-stats.visible { opacity: 1; }
+
+.stat-block {
+  text-align: right;
+}
+
+.stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.5rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+}
+
+/* ── MAIN LAYOUT ── */
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+/* ── DROP ZONE ── */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 2px;
+  padding: 4rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+  background: var(--bg-secondary);
+  margin-bottom: 2rem;
+}
+
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border: 1px solid transparent;
+  transition: border-color 0.3s;
+  pointer-events: none;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(245, 158, 11, 0.03);
+}
+
+.drop-zone:hover::before,
+.drop-zone.drag-over::before {
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.drop-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.4;
+  transition: all 0.3s;
+}
+
+.drop-zone:hover .drop-icon { opacity: 0.8; transform: translateY(-4px); }
+
+.drop-text {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  font-weight: 300;
+}
+
+.drop-text strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.drop-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.file-input { display: none; }
+
+/* ── FILE PREVIEW BAR ── */
+.file-bar {
+  display: none;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: var(--bg-card);
+  border-left: 3px solid var(--accent);
+  margin-bottom: 2rem;
+}
+
+.file-bar.visible { display: flex; }
+
+.file-bar-info {
+  flex: 1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.file-bar-info strong {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.btn {
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.7rem 1.8rem;
+  border: none;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg-primary);
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+
+.btn-primary:hover {
+  background: var(--accent-bright);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+.btn-download {
+  background: var(--bg-card);
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+}
+
+.btn-download:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: var(--accent);
+}
+
+/* ── PROGRESS ── */
+.progress-container {
+  display: none;
+  margin-bottom: 2rem;
+}
+
+.progress-container.visible { display: block; }
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.progress-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.3s;
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: -2px;
+  width: 2px;
+  height: 7px;
+  background: var(--accent-bright);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* ── RESULTS SECTION ── */
+.results-section {
+  display: none;
+}
+
+.results-section.visible { display: block; }
+
+/* Summary Strip */
+.summary-strip {
+  display: flex;
+  gap: 1px;
+  margin-bottom: 2.5rem;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.summary-item {
+  flex: 1;
+  background: var(--bg-card);
+  padding: 1.2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.summary-item:hover {
+  background: var(--bg-card-hover);
+}
+
+.summary-item.active {
+  background: var(--bg-card-hover);
+}
+
+.summary-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+}
+
+.summary-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.summary-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  margin-top: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+/* Action Bar */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.action-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.category-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.category-tag:hover,
+.category-tag.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.action-bar-right {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* ── IMAGE GRID ── */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 3px;
+}
+
+.image-card {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--bg-card);
+  cursor: pointer;
+  group: true;
+}
+
+.image-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease, filter 0.3s;
+}
+
+.image-card:hover img {
+  transform: scale(1.05);
+}
+
+.image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+
+.image-card:hover .image-overlay {
+  opacity: 1;
+}
+
+.image-filename {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.image-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.3rem;
+}
+
+.image-category-badge {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.image-confidence {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--success);
+}
+
+.confidence-low { color: var(--danger); }
+.confidence-mid { color: var(--accent); }
+.confidence-high { color: var(--success); }
+
+/* ── LIGHTBOX ── */
+.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(0, 0, 0, 0.95);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.lightbox.visible {
+  display: flex;
+}
+
+.lightbox img {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 1.5rem;
+  right: 2rem;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+}
+
+.lightbox-close:hover { color: var(--text-primary); }
+
+.lightbox-info {
+  position: absolute;
+  bottom: 2rem;
+  left: 2rem;
+  right: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.lightbox-filename {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.lightbox-scores {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.score-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.2rem 0.6rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.score-pill.top {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-muted);
+}
+
+.empty-state-icon {
+  font-size: 2.5rem;
+  opacity: 0.3;
+  margin-bottom: 1rem;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.fade-in {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.image-card {
+  opacity: 0;
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.loading-pulse {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  h1 { font-size: 2.5rem; }
+  .header-stats { display: none; }
+  .summary-strip { flex-wrap: wrap; }
+  .summary-item { min-width: calc(33% - 1px); }
+  .image-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .action-bar { flex-direction: column; gap: 1rem; align-items: flex-start; }
+  .category-tag { font-size: 0.65rem; }
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  z-index: 9999;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+</style>
+</head>
+<body>
+<div class="caution-bar"></div>
+
+<header>
+  <div class="header-grid">
+    <div>
+      <div class="logo-block">
+        <div class="logo-icon">🏗</div>
+      </div>
+      <h1>CONSTRUCTION<span>VIEW</span></h1>
+      <p class="subtitle">AI-POWERED SITE PHOTO CLASSIFIER — CLIP ViT-B/32</p>
+    </div>
+    <div class="header-stats" id="headerStats">
+      <div class="stat-block">
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-label">Total Photos</div>
+      </div>
+      <div class="stat-block">
+        <div class="stat-value" id="statCategories">0</div>
+        <div class="stat-label">Categories</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Drop Zone -->
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-icon">⬆</div>
+    <p class="drop-text">사진을 드래그하거나 <strong>클릭하여 업로드</strong></p>
+    <p class="drop-hint">JPG, PNG, BMP, WEBP — 여러 장 동시 업로드 가능</p>
+    <input type="file" class="file-input" id="fileInput" multiple accept="image/jpeg,image/png,image/bmp,image/webp">
+  </div>
+
+  <!-- File Bar -->
+  <div class="file-bar" id="fileBar">
+    <div class="file-bar-info">
+      <strong id="fileCount">0</strong>개 파일 선택됨
+    </div>
+    <button class="btn btn-secondary" onclick="clearFiles()">초기화</button>
+    <button class="btn btn-primary" id="classifyBtn" onclick="classify()">분류 시작</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-container" id="progressContainer">
+    <div class="progress-header">
+      <span class="progress-label loading-pulse" id="progressLabel">분류 진행 중...</span>
+      <span class="progress-label" id="progressPercent">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results-section" id="resultsSection">
+    <!-- Summary -->
+    <div class="summary-strip" id="summaryStrip"></div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <div class="action-bar-left" id="categoryTags"></div>
+      <div class="action-bar-right">
+        <button class="btn btn-download" onclick="downloadZip()">📦 ZIP 다운로드</button>
+      </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="image-grid" id="imageGrid"></div>
+  </div>
+</main>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+  <img id="lightboxImg" src="" alt="">
+  <div class="lightbox-info">
+    <div class="lightbox-filename" id="lightboxFilename"></div>
+    <div class="lightbox-scores" id="lightboxScores"></div>
+  </div>
+</div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileBar = document.getElementById('fileBar');
+const fileCount = document.getElementById('fileCount');
+const classifyBtn = document.getElementById('classifyBtn');
+const progressContainer = document.getElementById('progressContainer');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const progressPercent = document.getElementById('progressPercent');
+const resultsSection = document.getElementById('resultsSection');
+const summaryStrip = document.getElementById('summaryStrip');
+const categoryTags = document.getElementById('categoryTags');
+const imageGrid = document.getElementById('imageGrid');
+const headerStats = document.getElementById('headerStats');
+
+let selectedFiles = [];
+let classificationResults = [];
+let imageUrls = {};
+let activeFilter = 'all';
+
+// ── Drop Zone ──
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.classList.add('drag-over');
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.classList.remove('drag-over');
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+fileInput.addEventListener('change', (e) => {
+  handleFiles(e.target.files);
+});
+
+function handleFiles(files) {
+  selectedFiles = Array.from(files).filter(f =>
+    /\.(jpe?g|png|bmp|webp)$/i.test(f.name)
+  );
+
+  // Create preview URLs
+  Object.values(imageUrls).forEach(url => URL.revokeObjectURL(url));
+  imageUrls = {};
+  selectedFiles.forEach(f => {
+    imageUrls[f.name] = URL.createObjectURL(f);
+  });
+
+  fileCount.textContent = selectedFiles.length;
+  fileBar.classList.toggle('visible', selectedFiles.length > 0);
+
+  if (selectedFiles.length === 0) {
+    dropZone.querySelector('.drop-text').innerHTML = '사진을 드래그하거나 <strong>클릭하여 업로드</strong>';
+  } else {
+    dropZone.querySelector('.drop-text').innerHTML = `<strong>${selectedFiles.length}</strong>개 파일 준비됨`;
+  }
+}
+
+function clearFiles() {
+  selectedFiles = [];
+  Object.values(imageUrls).forEach(url => URL.revokeObjectURL(url));
+  imageUrls = {};
+  fileInput.value = '';
+  fileBar.classList.remove('visible');
+  resultsSection.classList.remove('visible');
+  headerStats.classList.remove('visible');
+  dropZone.querySelector('.drop-text').innerHTML = '사진을 드래그하거나 <strong>클릭하여 업로드</strong>';
+}
+
+// ── Classification ──
+async function classify() {
+  if (selectedFiles.length === 0) return;
+
+  classifyBtn.disabled = true;
+  progressContainer.classList.add('visible');
+  resultsSection.classList.remove('visible');
+  progressFill.style.width = '0%';
+  progressPercent.textContent = '0%';
+  progressLabel.textContent = '서버로 전송 중...';
+
+  const formData = new FormData();
+  selectedFiles.forEach(f => formData.append('files', f));
+
+  try {
+    // Simulate progress during upload
+    let fakeProgress = 0;
+    const progressTimer = setInterval(() => {
+      fakeProgress = Math.min(fakeProgress + Math.random() * 15, 85);
+      progressFill.style.width = fakeProgress + '%';
+      progressPercent.textContent = Math.round(fakeProgress) + '%';
+      if (fakeProgress > 30) progressLabel.textContent = '이미지 분류 중...';
+    }, 300);
+
+    const response = await fetch('/api/classify', {
+      method: 'POST',
+      body: formData,
+    });
+
+    clearInterval(progressTimer);
+
+    if (!response.ok) throw new Error('분류 실패');
+
+    classificationResults = await response.json();
+
+    progressFill.style.width = '100%';
+    progressPercent.textContent = '100%';
+    progressLabel.textContent = '완료!';
+    progressLabel.classList.remove('loading-pulse');
+
+    setTimeout(() => {
+      progressContainer.classList.remove('visible');
+      progressLabel.classList.add('loading-pulse');
+      renderResults();
+    }, 600);
+
+  } catch (err) {
+    progressLabel.textContent = '오류: ' + err.message;
+    progressLabel.classList.remove('loading-pulse');
+    progressFill.style.background = 'var(--danger)';
+    progressFill.style.width = '100%';
+  } finally {
+    classifyBtn.disabled = false;
+  }
+}
+
+// ── Render Results ──
+function renderResults() {
+  if (classificationResults.length === 0) return;
+
+  // Count per category
+  const counts = {};
+  classificationResults.forEach(r => {
+    counts[r.category_label] = (counts[r.category_label] || 0) + 1;
+  });
+
+  const uniqueCategories = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+
+  // Header stats
+  document.getElementById('statTotal').textContent = classificationResults.length;
+  document.getElementById('statCategories').textContent = uniqueCategories.length;
+  headerStats.classList.add('visible');
+
+  // Summary strip
+  summaryStrip.innerHTML = '';
+  uniqueCategories.forEach(cat => {
+    const item = document.createElement('div');
+    item.className = 'summary-item';
+    item.innerHTML = `
+      <div class="summary-count">${counts[cat]}</div>
+      <div class="summary-label">${cat}</div>
+    `;
+    item.addEventListener('click', () => filterByCategory(cat));
+    summaryStrip.appendChild(item);
+  });
+
+  // Category tags
+  categoryTags.innerHTML = '';
+  const allTag = document.createElement('span');
+  allTag.className = 'category-tag active';
+  allTag.textContent = `전체 (${classificationResults.length})`;
+  allTag.addEventListener('click', () => filterByCategory('all'));
+  categoryTags.appendChild(allTag);
+
+  uniqueCategories.forEach(cat => {
+    const tag = document.createElement('span');
+    tag.className = 'category-tag';
+    tag.textContent = `${cat} (${counts[cat]})`;
+    tag.addEventListener('click', () => filterByCategory(cat));
+    categoryTags.appendChild(tag);
+  });
+
+  activeFilter = 'all';
+  renderGrid(classificationResults);
+  resultsSection.classList.add('visible');
+}
+
+function filterByCategory(category) {
+  activeFilter = category;
+
+  // Update active tags
+  document.querySelectorAll('.category-tag').forEach(tag => {
+    const isAll = tag.textContent.startsWith('전체');
+    tag.classList.toggle('active',
+      category === 'all' ? isAll : tag.textContent.startsWith(category)
+    );
+  });
+
+  document.querySelectorAll('.summary-item').forEach(item => {
+    const label = item.querySelector('.summary-label').textContent;
+    item.classList.toggle('active', category !== 'all' && label === category);
+  });
+
+  const filtered = category === 'all'
+    ? classificationResults
+    : classificationResults.filter(r => r.category_label === category);
+
+  renderGrid(filtered);
+}
+
+function renderGrid(results) {
+  imageGrid.innerHTML = '';
+
+  if (results.length === 0) {
+    imageGrid.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        <div class="empty-state-icon">📭</div>
+        <p>해당 카테고리에 분류된 사진이 없습니다</p>
+      </div>
+    `;
+    return;
+  }
+
+  results.forEach((r, idx) => {
+    const card = document.createElement('div');
+    card.className = 'image-card';
+    card.style.animationDelay = `${Math.min(idx * 0.03, 1)}s`;
+
+    const confClass = r.confidence >= 0.3 ? 'confidence-high' : r.confidence >= 0.15 ? 'confidence-mid' : 'confidence-low';
+
+    card.innerHTML = `
+      <img src="${imageUrls[r.filename] || ''}" alt="${r.filename}" loading="lazy">
+      <div class="image-overlay">
+        <div class="image-filename">${r.filename}</div>
+        <div class="image-meta">
+          <span class="image-category-badge">${r.category_label}</span>
+          <span class="image-confidence ${confClass}">${(r.confidence * 100).toFixed(0)}%</span>
+        </div>
+      </div>
+    `;
+
+    card.addEventListener('click', () => openLightbox(r));
+    imageGrid.appendChild(card);
+  });
+}
+
+// ── Lightbox ──
+function openLightbox(result) {
+  const lightbox = document.getElementById('lightbox');
+  document.getElementById('lightboxImg').src = imageUrls[result.filename] || '';
+  document.getElementById('lightboxFilename').textContent = result.filename;
+
+  const scoresEl = document.getElementById('lightboxScores');
+  scoresEl.innerHTML = '';
+
+  if (result.all_scores) {
+    const sorted = Object.entries(result.all_scores)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+
+    sorted.forEach(([label, score], i) => {
+      const pill = document.createElement('span');
+      pill.className = `score-pill ${i === 0 ? 'top' : ''}`;
+      pill.textContent = `${label} ${(score * 100).toFixed(1)}%`;
+      scoresEl.appendChild(pill);
+    });
+  }
+
+  lightbox.classList.add('visible');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(event) {
+  if (event && event.target !== event.currentTarget && !event.target.classList.contains('lightbox-close')) return;
+  document.getElementById('lightbox').classList.remove('visible');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeLightbox();
+});
+
+// ── Download ZIP ──
+async function downloadZip() {
+  if (selectedFiles.length === 0) return;
+
+  const btn = document.querySelector('.btn-download');
+  const originalText = btn.textContent;
+  btn.textContent = '⏳ 생성 중...';
+  btn.disabled = true;
+
+  const formData = new FormData();
+  selectedFiles.forEach(f => formData.append('files', f));
+
+  try {
+    const response = await fetch('/api/download-zip', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error('ZIP 생성 실패');
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'classified_photos.zip';
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('다운로드 실패: ' + err.message);
+  } finally {
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
