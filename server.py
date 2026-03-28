@@ -4,9 +4,8 @@ import csv
 import zipfile
 from pathlib import Path
 
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Request
 from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
 from classifier import load_model, classify_uploaded_images
@@ -32,9 +31,40 @@ async def index():
     return (STATIC_DIR / "index.html").read_text(encoding="utf-8")
 
 
+def save_categories(categories: list[dict]):
+    with open(CATEGORIES_FILE, "w", encoding="utf-8") as f:
+        json.dump({"categories": categories}, f, ensure_ascii=False, indent=2)
+
+
 @app.get("/api/categories")
 async def api_categories():
     return get_categories()
+
+
+@app.post("/api/categories")
+async def add_category(request: Request):
+    body = await request.json()
+    label = body.get("label", "").strip()
+    prompt = body.get("prompt", "").strip()
+    if not label or not prompt:
+        return JSONResponse({"error": "label과 prompt를 입력해주세요"}, status_code=400)
+    cats = get_categories()
+    new_id = label.replace(" ", "_")
+    # other 앞에 삽입
+    other_idx = next((i for i, c in enumerate(cats) if c["id"] == "other"), len(cats))
+    cats.insert(other_idx, {"id": new_id, "label": label, "prompt": prompt})
+    save_categories(cats)
+    return cats
+
+
+@app.delete("/api/categories/{category_id}")
+async def delete_category(category_id: str):
+    if category_id == "other":
+        return JSONResponse({"error": "기타 카테고리는 삭제할 수 없습니다"}, status_code=400)
+    cats = get_categories()
+    cats = [c for c in cats if c["id"] != category_id]
+    save_categories(cats)
+    return cats
 
 
 @app.post("/api/classify")

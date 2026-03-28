@@ -274,6 +274,130 @@ main {
   border-color: var(--accent);
 }
 
+/* ── CATEGORY MANAGER ── */
+.category-manager {
+  margin-bottom: 2rem;
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
+.category-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.category-manager-header:hover {
+  background: var(--bg-card);
+}
+
+.category-manager-header h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.05em;
+}
+
+.category-manager-toggle {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  transition: transform 0.3s;
+}
+
+.category-manager-toggle.open { transform: rotate(180deg); }
+
+.category-manager-body {
+  display: none;
+  padding: 0 1.5rem 1.5rem;
+}
+
+.category-manager-body.visible { display: block; }
+
+.cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--bg-card);
+  font-size: 0.8rem;
+}
+
+.cat-item-label {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 80px;
+}
+
+.cat-item-prompt {
+  flex: 1;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cat-item-delete {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.4rem;
+  transition: color 0.2s;
+}
+
+.cat-item-delete:hover { color: var(--danger); }
+.cat-item-delete.disabled { pointer-events: none; opacity: 0.2; }
+
+.cat-add-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cat-add-form input {
+  flex: 1;
+  padding: 0.5rem 0.8rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.8rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.cat-add-form input:focus { border-color: var(--accent); }
+
+.cat-add-form input::placeholder { color: var(--text-muted); }
+
+.btn-add-cat {
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--bg-primary);
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.btn-add-cat:hover { background: var(--accent-bright); }
+
 /* ── PROGRESS ── */
 .progress-container {
   display: none;
@@ -660,6 +784,22 @@ body::after {
 </header>
 
 <main>
+  <!-- Category Manager -->
+  <div class="category-manager">
+    <div class="category-manager-header" onclick="toggleCategoryManager()">
+      <h3>📋 카테고리 관리</h3>
+      <span class="category-manager-toggle" id="catToggle">▼</span>
+    </div>
+    <div class="category-manager-body" id="catManagerBody">
+      <div class="cat-list" id="catList"></div>
+      <div class="cat-add-form">
+        <input type="text" id="newCatLabel" placeholder="한글 이름 (예: 용접 작업)">
+        <input type="text" id="newCatPrompt" placeholder="영문 설명 (예: welding work at construction site)">
+        <button class="btn-add-cat" onclick="addCategory()">추가</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Drop Zone -->
   <div class="drop-zone" id="dropZone">
     <div class="drop-icon">⬆</div>
@@ -736,6 +876,55 @@ let selectedFiles = [];
 let classificationResults = [];
 let imageUrls = {};
 let activeFilter = 'all';
+
+// ── Category Manager ──
+function toggleCategoryManager() {
+  const body = document.getElementById('catManagerBody');
+  const toggle = document.getElementById('catToggle');
+  body.classList.toggle('visible');
+  toggle.classList.toggle('open');
+  if (body.classList.contains('visible')) loadCategories();
+}
+
+async function loadCategories() {
+  const res = await fetch('/api/categories');
+  const cats = await res.json();
+  const list = document.getElementById('catList');
+  list.innerHTML = '';
+  cats.forEach(cat => {
+    const item = document.createElement('div');
+    item.className = 'cat-item';
+    item.innerHTML = `
+      <span class="cat-item-label">${cat.label}</span>
+      <span class="cat-item-prompt">${cat.prompt}</span>
+      <button class="cat-item-delete ${cat.id === 'other' ? 'disabled' : ''}"
+              onclick="deleteCategory('${cat.id}')">&times;</button>
+    `;
+    list.appendChild(item);
+  });
+}
+
+async function addCategory() {
+  const label = document.getElementById('newCatLabel').value.trim();
+  const prompt = document.getElementById('newCatPrompt').value.trim();
+  if (!label || !prompt) return alert('한글 이름과 영문 설명을 모두 입력해주세요');
+
+  await fetch('/api/categories', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ label, prompt }),
+  });
+
+  document.getElementById('newCatLabel').value = '';
+  document.getElementById('newCatPrompt').value = '';
+  loadCategories();
+}
+
+async function deleteCategory(id) {
+  if (!confirm('이 카테고리를 삭제하시겠습니까?')) return;
+  await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+  loadCategories();
+}
 
 // ── Drop Zone ──
 dropZone.addEventListener('click', () => fileInput.click());
